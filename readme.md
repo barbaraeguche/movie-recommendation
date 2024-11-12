@@ -6,7 +6,6 @@
 ## running the project 🏁
 to get the project up and running on your local machine, follow these steps:
 
-- **ensure jdk is installed:** must have the [cmake](https://cmake.org/download/) installed.
 - **clone the repository:**
 ```bash
 git clone git clone https://github.com/barbaraeguche/movie-recommendation.git
