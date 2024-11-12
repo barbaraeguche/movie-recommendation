@@ -16,7 +16,7 @@ cd movie-recommendation
 ```
 - **run the project:**
 ```bash
-gcc -o program main.c movie.c
+gcc -o program main.c movies.c
 ./program
 ```
 
