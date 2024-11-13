@@ -3,147 +3,283 @@
 #include <stdlib.h>
 #include "movies.h"
 
-//----------------------------------------------------------------//
-#define MAX_USERS 20
-#define MAX_NAME_LENGTH 15
-#define MAX_MOVIE_LENGTH 90
-#define MAX_RATING_LENGTH 60
-//----------------------------------------------------------------//
+#define MAX_USERS 30
+#define MAX_NAME_LENGTH 50
+#define MAX_MOVIE_LENGTH 150
+#define MAX_RATING_LENGTH 90
+
 FILE *fptr;
-char **userDatabase, **movieDatabase;
-float movieRating, **ratingsDatabase;
-int userCount = 0, movieCount = 0, movieNumber;
-bool moviesWereRead = false, ratingsWereRead = false;
-//----------------------------------------------------------------//
+char **userDb, **moviesDb;
+float movieRating, **ratingsDb;
+int usersCount = 0, moviesCount = 0, movieIdx;
+bool moviesRead = false, ratingsRead = false;
 
 /**
- * This function prints the main menu options to the console.
+ * this function prints the main menu options to the console.
+ * @return none.
  */
 void displayMenu() {
-    printf("\n***** Movie Recommendation System *****\n");
-    printf("1. Register User\n");
-    printf("2. Display Movies\n");
-    printf("3. Rate a Movie\n");
-    printf("4. Get Movie Recommendations\n");
-    printf("0. Exit\n");
+    printf("-----------------------------\n");
+    printf("          Main Menu            \n");
+    printf("-----------------------------\n");
+    printf(" 1. Register User\n");
+    printf(" 2. Display Movies\n");
+    printf(" 3. Rate a Movie\n");
+    printf(" 4. Get Movie Recommendations\n");
+    printf(" 0. Exit\n");
+    printf("-----------------------------\n");
     printf("Enter your choice: ");
 }
 
 /**
- * This function reads user data from a file and populates the userDatabase array. If the file does not exist, it prints an error message and returns.
- */
-void readUsersFromDb() {
-    fptr = fopen("/Users/barbara/courseHub/COMP 348/A1/text_files/user_data.txt", "r");
-    char nameAndNumber[MAX_NAME_LENGTH];
-
-    if(fptr == NULL) { //the file does not exist
-        printf("\'user_data.txt\' not found.\n\n");
-        return;
-    }
-
-    //free previously allocated memory for userDatabase
-    if(userCount != 0) {
-        freeCharMemory(userDatabase, MAX_USERS);
-    }
-
-    //dynamically allocate memory for userDatabase
-    userDatabase = (char **)malloc(MAX_USERS * sizeof(char *));
-    for(int i = 0; i < MAX_USERS; i++) {
-        userDatabase[i] = (char *)malloc(MAX_NAME_LENGTH * sizeof(char));
-    }
-
-    userCount = 0;
-    while(fgets(nameAndNumber, sizeof(nameAndNumber), fptr)) {
-        //tokenize the original string
-        char *nameOnly = strtok(nameAndNumber, " "); //split the string to record only the name and not the number
-
-        //read users into the database, remove the newline at the end of the string, and update the number of users
-        strcpy(userDatabase[userCount], nameOnly);
-        userDatabase[userCount][strcspn(userDatabase[userCount], "\n")] = '\0';
-        userCount++;
-    }
-    fclose(fptr);
-}
-/**
- * This function writes user data from the userDatabase array to a file. If the file does not exist, it creates a new one.
- */
-void writeUsersToDb() {
-    fptr = fopen("/Users/barbara/courseHub/COMP 348/A1/text_files/user_data.txt", "wt");
-    for(int i = 0; i < userCount; i++) {
-        if(i != (userCount - 1)) { //if not at the last user, add a newline after writing to the file and continue
-            fprintf(fptr, "%s %d\n", userDatabase[i], (i + 1));
-            continue;
-        }
-        fprintf(fptr, "%s %d", userDatabase[i], (i + 1));
-    }
-    fclose(fptr);
-}
-
-/**
- * This function checks if a user with the given username is registered in the userDatabase.
- * @param username the username to search for
- * @return true if the user is registered, false otherwise
- */
-bool isUserRegistered(const char *username) {
-    for(int i = 0; i < userCount; i++) {
-        if(strcasecmp(username, userDatabase[i]) == 0) { //making the search case-insensitive
-            return true;
-        }
-    }
-    return false;
-}
-/**
- * This function prompts the user to enter a new username for registration. It checks if the username is already registered.
- * If not, adds it to the user database and writes to file.
+ * this function registers a new user into `userDb`.
+ * 
+ * it checks if the user is already registered, and if not, adds it to `userDb`, and writes to `userData.txt`.
+ * @return none.
  */
 void registerUser() {
     char newUser[MAX_NAME_LENGTH];
-    bool found;
+    bool userFound;
 
     readUsersFromDb();
     do {
-        printf("Enter username for registration: ");
-        scanf("%14s", newUser);
+        printf("\nEnter username to register: ");
+        scanf("%30s", newUser);
 
-        found = isUserRegistered(newUser);
-        if(found) {
-            printf("User already exists. Please choose a different name.\n");
-        } else {
-            //add new user to the database, remove the newline at the end of the string, and update the number of users
-            strcpy(userDatabase[userCount], newUser);
-            userDatabase[userCount][strcspn(userDatabase[userCount], "\n")] = '\0';
-            userCount++;
-            printf("User %s is successfully registered.\n", newUser);
+        userFound = isUserRegistered(newUser);
+        if(userFound) {
+            printf("~~ User already exists. Please choose a different name.\n");
+            continue;
         }
-    } while(found);
+        
+        //add new user to the database, remove the newline at the end of the string, and update the number of users
+        strcpy(userDb[usersCount], newUser);
+        userDb[usersCount][strcspn(userDb[usersCount], "\n")] = '\0';
+        usersCount++;
+        printf("~~ User %s has been successfully registered.\n", newUser);
+    } while(userFound);
     writeUsersToDb();
 }
 
 /**
- * This function reads movie data from a file and populates the movieDatabase array. If the file does not exist, it prints an error message and returns.
+ * this function displays all available movies to the console. 
+ * @return none.
  */
-void readMovies() {
-    fptr = fopen("/Users/barbara/courseHub/COMP 348/A1/text_files/movie_database.txt", "r");
-    char display[MAX_MOVIE_LENGTH];
+void displayMovies() {
+    readMovies();
 
-    if(fptr == NULL) { //the file does not exist
-        printf("\'movie_database.txt\' not found.\n\n");
+    //if the file was opened and read successfully
+    if(moviesRead) {
+        printf("\n-----------------------------\n");
+        printf("        Movie Database         \n");
+        printf("-----------------------------\n");
+
+        for(int i = 0; i < moviesCount; i++) {
+            if(i != (moviesCount - 1)) {
+                printf("%d. %s\n", (i + 1), moviesDb[i]);
+                continue;
+            }
+            printf("%d. %s", (i + 1), moviesDb[i]);
+        }
+        printf("\n----------\n");
+    }
+}
+
+/**
+ * this function allows a user to rate a movie. it prompts the user to enter their username, then displays a list of all available movies to rate.
+
+ * after the user selects a movie and provides a rating, the rating is recorded and written to `ratingsData.txt`.
+ * 
+ * if the user is not found or if the movie number or rating provided is invalid, appropriate messages are displayed.
+ * @return none.
+ */
+void rateMovie() {
+    char validateUser[MAX_NAME_LENGTH];
+    readUsersFromDb();
+
+    printf("\nEnter your username: ");
+    scanf("%30s", validateUser);
+
+    bool userFound = isUserRegistered(validateUser);
+    if(!userFound) {
+        printf("~~ User not found. Please register first.\n");
         return;
     }
 
-    //free previously allocated memory for movieDatabase
-    if(movieCount != 0) {
-        freeCharMemory(movieDatabase, 10);
+    displayMovies();
+    int userIndex = findUserIndex(validateUser);
+
+    //prompt the user to enter the movie number and rating
+    movieIdx = validateInput("\nEnter the number of the movie you want to rate: ", moviesCount);
+    movieRating = validateInput("Enter your rating (1-5): ", 5);
+
+    readRatingsFromDb();
+    //update the movie rating
+    ratingsDb[userIndex][movieIdx - 1] = movieRating;
+
+    writeRatingsToDb();
+    printf("\n~~ Rating recorded successfully.\n");
+}
+
+/**
+ * this function recommends movies for a user based on the ratings of other users. 
+ * 
+ * it prompts the user to enter their username, then checks if the user is registered.
+ * 
+ * if the user is found, their recommendations are generated by calculating the average rating of unseen movies based on ratings from other users.
+ * @return none.
+ */
+void recommendMovies() {
+    char validateUser[MAX_NAME_LENGTH], *nameAndGenre, recommendation[MAX_MOVIE_LENGTH];
+    int countedRatings = 0, movieCounter = 1;
+    float sumRatings = 0;
+
+    readUsersFromDb();
+    printf("\nEnter your username: ");
+    scanf("%14s", validateUser);
+
+    bool found = isUserRegistered(validateUser);
+    if(!found) {
+        printf("~~ User not found. Please register first.\n");
+        return;
     }
 
-    //dynamically allocate memory for movieDatabase
-    movieDatabase = (char**)malloc(10 * sizeof(char*));
+    int userIndex = findUserIndex(validateUser);
+    readMovies();
+    readRatingsFromDb();
+
+    printf("\n-----------------------------\n");
+    printf("      Recommended Movies       \n");
+    printf("-----------------------------\n");
+
+    for(int i = 0; i < moviesCount; i++) { //for each movie
+        for(int j = 0; j < usersCount; j++) { //for each user
+
+            //if the user hasn't seen the movie(movie rating is 0.0 by default)
+            if(ratingsDb[userIndex][i] == 0.0) {
+                if(ratingsDb[j][i] != 0.0) { //if the other users have seen the movie(movie rating is not 0.0)
+                   sumRatings += ratingsDb[j][i]; //update the total rating of the other users
+                   countedRatings++; //count the number of users that have seen the movie
+                }
+            }
+        }
+
+        if(countedRatings != 0) {
+            nameAndGenre = strtok(moviesDb[i], "-"); //split the string by the hyphen
+            float predictedRating = sumRatings / countedRatings; //calculate the average rating of other users
+
+            //format the components into the desired string
+            sprintf(recommendation, "%d. %s-- Predicted Rating: %.1f\n", movieCounter, nameAndGenre, predictedRating);
+            printf("%s", recommendation);
+            movieCounter++;
+        }
+        sumRatings = 0;
+        countedRatings = 0;
+    }
+}
+
+
+
+// ~~~~~~~~~~~~~~~ helper functions ~~~~~~~~~~~~~~~ //
+/**
+ * this function reads the users from the `userData.txt` file, and populates the `userDb` array.
+ * 
+ * if the file does not exist, it prints an error message and returns.
+ * @return none.
+ */
+void readUsersFromDb() {
+    fptr = fopen("textfiles/userData.txt", "r");
+    char nameAndNumber[MAX_NAME_LENGTH];
+
+    if(fptr == NULL) { //the file does not exist
+        printf("File \'userData.txt\' was not found.\n\n");
+        return;
+    }
+
+    //free previously allocated memory for userDb
+    if(usersCount != 0) {
+        freeCharMemory(userDb, MAX_USERS);
+    }
+
+    //dynamically allocate memory for userDb
+    userDb = (char **)malloc(MAX_USERS * sizeof(char *));
+    for(int i = 0; i < MAX_USERS; i++) {
+        userDb[i] = (char *)malloc(MAX_NAME_LENGTH * sizeof(char));
+    }
+
+    usersCount = 0;
+    while(fgets(nameAndNumber, sizeof(nameAndNumber), fptr)) {
+        //split the string to record only the name and not the number
+        char *nameOnly = strtok(nameAndNumber, " ");
+
+        //read users into the database, remove the newline at the end of the string, and update the number of users
+        strcpy(userDb[usersCount], nameOnly);
+        userDb[usersCount][strcspn(userDb[usersCount], "\n")] = '\0';
+        usersCount++;
+    }
+    fclose(fptr);
+}
+
+/**
+ * this function writes the users from the `userDb` array to the `userData.txt` file.
+ * 
+ * if the file does not exist, it creates a new one.
+ * @return none.
+ */
+void writeUsersToDb() {
+    fptr = fopen("textfiles/userData.txt", "wt");
+    for(int i = 0; i < usersCount; i++) {
+        //if not the last user, add newline after writing to file and continue
+        if(i != (usersCount - 1)) {
+            fprintf(fptr, "%s %d\n", userDb[i], (i + 1));
+            continue;
+        }
+        fprintf(fptr, "%s %d", userDb[i], (i + 1));
+    }
+    fclose(fptr);
+}
+
+/**
+ * this function checks if a user is registered in `userDb`.
+ * 
+ * @param username the sought username.
+ * @return true if the user is registered, otherwise false.
+ */
+bool isUserRegistered(const char *username) {
+    for(int i = 0; i < usersCount; i++) {
+        //making the search case-insensitive
+        if(strcasecmp(username, userDb[i]) == 0) return true;
+    }
+    return false;
+}
+
+/**
+ * this function reads the movies from the `moviesData.txt` file, and populates the `moviesDb` array.
+ * 
+ * if the file does not exist, it prints an error message and returns.
+ * @return none.
+ */
+void readMovies() {
+    fptr = fopen("textfiles/moviesData.txt", "r");
+    char display[MAX_MOVIE_LENGTH];
+
+    if(fptr == NULL) { //the file does not exist
+        printf("File \'moviesData.txt\' was not found.\n\n");
+        return;
+    }
+
+    //free previously allocated memory for moviesDb
+    if(moviesCount != 0) {
+        freeCharMemory(moviesDb, 10);
+    }
+
+    //dynamically allocate memory for moviesDb
+    moviesDb = (char**)malloc(10 * sizeof(char*));
     for(int i = 0; i < 10; i++) {
-        movieDatabase[i] = (char *)malloc(MAX_MOVIE_LENGTH * sizeof(char));
+        moviesDb[i] = (char *)malloc(MAX_MOVIE_LENGTH * sizeof(char));
     }
 
-    moviesWereRead = true;
-    movieCount = 0;
+    moviesCount = 0;
     while(fgets(display, sizeof(display), fptr)) {
         //split the string by the space
         char *title = strtok(display, " ");
@@ -162,100 +298,99 @@ void readMovies() {
         sprintf(formattedString, "%s (%s) - %s", title, genre, rating);
 
         //add formatted string to movie database, remove the newline at the end of the string, and update the number of movies
-        strcpy(movieDatabase[movieCount], formattedString);
-        movieDatabase[movieCount][strcspn(movieDatabase[movieCount], "\n")] = '\0';
-        movieCount++;
+        strcpy(moviesDb[moviesCount], formattedString);
+        moviesDb[moviesCount][strcspn(moviesDb[moviesCount], "\n")] = '\0';
+        moviesCount++;
     }
+    moviesRead = true;
+
     fclose(fptr);
 }
-/**
- * This function reads movie data from file and displays it to the console. If the file does not exist, it prints an error message and returns.
- */
-void displayMovies() {
-
-    readMovies();
-    if(moviesWereRead) { //if the file was opened and read successfully
-        printf("\n***** Movie Database *****\n");
-        for(int i = 0; i < movieCount; i++) {
-            printf("%d. %s\n", (i + 1), movieDatabase[i]);
-        }
-    }
-}
 
 /**
- * This function reads user ratings data from a file and populates the ratingsDatabase array. If the file does not exist, it prints an error message and returns.
+ * this function reads the ratings from the `ratingsData.txt` file, and populates the `ratingsDb` array.
+ * 
+ * if the file does not exist, it prints an error message and returns.
+ * @return none.
  */
 void readRatingsFromDb() {
-    fptr = fopen("/Users/barbara/courseHub/COMP 348/A1/text_files/user_ratings.txt", "r");
+    fptr = fopen("textfiles/ratingsData.txt", "r");
+
     char ratings[MAX_RATING_LENGTH], *token;
     int userIndex = 0, movieIndex = 0;
 
     if(fptr == NULL) { //the file does not exist
-        printf("\'user_ratings.txt\' not found.\n\n");
+        printf("File \'ratingsData.txt\' was not found.\n\n");
         return;
     }
 
-    //free previously allocated memory for ratingsDatabase
-    if(ratingsWereRead) {
-        freeFloatMemory(ratingsDatabase, userCount);
+    //free previously allocated memory for ratingsDb
+    if(ratingsRead) {
+        freeFloatMemory(ratingsDb, usersCount);
     }
 
-    //dynamically allocate memory for ratingsDatabase
-    ratingsDatabase = (float **)malloc(userCount * sizeof(float *));
+    //dynamically allocate memory for ratingsDb
+    ratingsDb = (float **)malloc(usersCount * sizeof(float *));
     for(int i = 0; i < MAX_USERS; i++) {
-        ratingsDatabase[i] = (float *)malloc(movieCount * sizeof(float));
+        ratingsDb[i] = (float *)malloc(moviesCount * sizeof(float));
     }
 
-    ratingsWereRead = true;
-    fgets(ratings, sizeof(ratings), fptr);
+    fgets(ratings, sizeof(ratings), fptr); //skip the first line
     while(fgets(ratings, sizeof(ratings), fptr) != NULL) {
         token = strtok(ratings, " ");
 
         while(token != NULL) { //keep splitting by the space till the end of the string
-            ratingsDatabase[userIndex][movieIndex] = atof(token);
+            ratingsDb[userIndex][movieIndex] = atof(token);
             movieIndex++;
             token = strtok(NULL, " ");
         }
         movieIndex = 0;
         userIndex++;
     }
+    ratingsRead = true;
+
     fclose(fptr);
 
     //new users may have been registered, so set their ratings to the default(0.0)
-    for(int i = userIndex; i < userCount; i++) {
-        for(int j = 0; j < movieCount; j++) {
-            ratingsDatabase[i][j] = 0.0;
+    for(int i = userIndex; i < usersCount; i++) {
+        for(int j = 0; j < moviesCount; j++) {
+            ratingsDb[i][j] = 0.0;
         }
     }
 }
+
 /**
- * This function writes user ratings data from the ratingsDatabase array to a file. If the file does not exist, it creates a new one.
+ * this function writes the ratings from the `ratingsDb` array to the `ratingsData.txt` file.
+ * 
+ * if the file does not exist, it creates a new one.
+ * @return none.
  */
 void writeRatingsToDb() {
-    fptr = fopen("/Users/barbara/courseHub/COMP 348/A1/text_files/user_ratings.txt", "wt");
+    fptr = fopen("textfiles/ratingsData.txt", "wt");
 
-    fprintf(fptr, "%d %d\n", userCount, movieCount);
-    for(int i = 0; i < userCount; i++) {
-        for(int j = 0; j < movieCount; j++) {
-            if(j != movieCount - 1) { //if not at the last movie rating of a user, add a space after writing the movie rating to the file and continue
-                fprintf(fptr, "%.1f ", ratingsDatabase[i][j]);
+    fprintf(fptr, "%d %d\n", usersCount, moviesCount);
+    for(int i = 0; i < usersCount; i++) {
+        for(int j = 0; j < moviesCount; j++) {
+            if(j != moviesCount - 1) { //if not the last movie rating of a user, add spacing after writing the movie rating to file and continue
+                fprintf(fptr, "%.1f ", ratingsDb[i][j]);
                 continue;
             }
-            if(i != userCount - 1) { //if not at the last user, add a newline after writing the last rating of all movies to the file and continue
-                fprintf(fptr, "%.1f\n", ratingsDatabase[i][j]);
+            if(i != usersCount - 1) { //if not the last user, add newline after writing the last rating of all movies to file and continue
+                fprintf(fptr, "%.1f\n", ratingsDb[i][j]);
                 continue;
             }
-            fprintf(fptr, "%.1f", ratingsDatabase[i][j]); //if at the last movie and user, add neither a newline nor a space
+            fprintf(fptr, "%.1f", ratingsDb[i][j]); //if at the last movie and user, neither add newline nor spacing
         }
     }
     fclose(fptr);
 }
 
 /**
- * This function validates a user-entered movie number & rating to ensure it falls within the specified range.
- * @param string the prompt instruction to display
- * @param maxRating the upper bound digit allowed
- * @return the validated input
+ * this function validates a user-entered movie number & rating to ensure it falls within the specified range.
+ * 
+ * @param string the prompt instruction to display.
+ * @param maxRating the upper bound digit allowed.
+ * @return the validated input.
  */
 float validateInput(const char *string, int maxRating) {
     float exactRating;
@@ -271,14 +406,16 @@ float validateInput(const char *string, int maxRating) {
 
     return exactRating;
 }
+
 /**
- * This function finds the index of a user in the userDatabase array based on the username.
- * @param username the username to search for
+ * this function finds the index of a user in the userDb array based on the username.
+ * 
+ * @param username the sought username.
  * @return the index of the user if found, otherwise -1.
  */
-int userRatingIndex(const char *username) {
-    for(int i = 0; i < userCount; i++) {
-        if(strcasecmp(username, userDatabase[i]) == 0) { //making the search case-insensitive
+int findUserIndex(const char *username) {
+    for(int i = 0; i < usersCount; i++) {
+        if(strcasecmp(username, userDb[i]) == 0) { //making the search case-insensitive
             return i;
         }
     }
@@ -286,127 +423,56 @@ int userRatingIndex(const char *username) {
 }
 
 /**
- * This function allows a user to rate a movie. It prompts the user to enter their username, then displays the list of movies for rating.
- * After the user selects a movie and provides a rating, the rating is recorded and written to file.
- * If the user is not found or if the movie number or rating provided is invalid, appropriate messages are displayed.
- */
-void rateMovie() {
-    char validateUser[MAX_NAME_LENGTH];
-
-    readUsersFromDb();
-    printf("Enter your username: ");
-    scanf("%14s", validateUser);
-
-    bool found = isUserRegistered(validateUser);
-    if(!found) {
-        printf("User not found. Please register first.\n");
-        return;
-    }
-
-    displayMovies();
-    int userIndex = userRatingIndex(validateUser);
-
-    //prompt the user to enter the movie number and rating
-    movieNumber = validateInput("Enter the number of the movie you want to rate: ", movieCount);
-    movieRating = validateInput("Enter your rating (1-5): ", 5);
-
-    readRatingsFromDb();
-    ratingsDatabase[userIndex][movieNumber - 1] = movieRating;  //update the movie rating
-
-    writeRatingsToDb();
-    printf("Rating recorded successfully.\n");
-}
-/**
- * This function generates movie recommendations for a user based on the ratings of other users. It prompts the user to enter their username, then checks if the user is registered.
- * If the user is found, recommendations are generated by calculating the average rating of movies that the user has not seen yet, based on ratings from other users.
- */
-void recommendMovies() {
-    char validateUser[MAX_NAME_LENGTH], *nameAndGenre, recommendation[MAX_MOVIE_LENGTH];
-    int countedRatings = 0, movieCounter = 1;
-    float sumRating = 0;
-
-    readUsersFromDb();
-    printf("Enter your username: ");
-    scanf("%14s", validateUser);
-
-    bool found = isUserRegistered(validateUser);
-    if(!found) {
-        printf("User not found. Please register first.\n");
-        return;
-    }
-
-    int userIndex = userRatingIndex(validateUser);
-    readMovies();
-    readRatingsFromDb();
-
-    printf("\n***** Recommended Movies *****\n");
-    for(int i = 0; i < movieCount; i++) { //for each movie
-        for(int j = 0; j < userCount; j++) { //for each user
-            if(ratingsDatabase[userIndex][i] == 0.0) { //if the user hasn't seen the movie(movie rating is 0.0 by default)
-                if(ratingsDatabase[j][i] != 0.0) { //if the other users have seen the movie(movie rating is not 0.0)
-                   sumRating += ratingsDatabase[j][i]; //update the total rating of the other users
-                   countedRatings++; //count the number of users that have seen the movie
-               }
-           }
-        }
-
-        if(countedRatings != 0) {
-            nameAndGenre = strtok(movieDatabase[i], "-"); //split the string by the hyphen
-            float predictedRating = sumRating / countedRatings; //calculate the average rating of other users
-
-            //format the components into the desired string
-            sprintf(recommendation, "%d. %s- Predicted Rating: %.1f\n", movieCounter, nameAndGenre, predictedRating);
-            printf("%s", recommendation);
-            movieCounter++;
-        }
-        sumRating = 0;
-        countedRatings = 0;
-    }
-}
-
-/**
- * This function deallocates memory that was dynamically allocated for an array of strings.
- * @param database pointer to the array of strings to be deallocated
- * @param arrayLength length of the array
+ * this function deallocates memory that was dynamically allocated for an array of strings.
+ * 
+ * @param database pointer to strings array to be deallocated.
+ * @param arrayLength array length.
+ * @return none.
  */
 void freeCharMemory(char **database, int arrayLength) {
-    for(int i = 0; i < arrayLength; i++) { //iterate through each string in the array and free its memory
+    //iterate through each string in the array and free its memory
+    for(int i = 0; i < arrayLength; i++) {
         free(database[i]);
     }
-    free(database); //free the memory allocated for the array itself
+
+    //free the memory allocated for the array itself
+    free(database);
 }
+
 /**
- * This function deallocates memory that was dynamically allocated for a 2D array of floats.
- * @param database pointer to the 2D array of floats to be deallocated
- * @param arrayLength length of the outer array (number of rows)
+ * this function deallocates memory that was dynamically allocated for a 2D array of floats.
+ * 
+ * @param database pointer to the 2D floats array to be deallocated.
+ * @param arrayLength outer array length (number of rows).
+ * @return none.
  */
 void freeFloatMemory(float **database, int arrayLength) {
-    for(int i = 0; i < arrayLength; i++) { //iterate through each string in the array and free its memory
+    //iterate through each string in the array and free its memory
+    for(int i = 0; i < arrayLength; i++) {
         free(database[i]);
     }
-    free(database); //free the memory allocated for the array itself
+
+    //free the memory allocated for the array itself
+    free(database);
 }
+
 /**
- * This function deallocates memory that was dynamically allocated for all databases: userDatabase, movieDatabase, and ratingsDatabase.
- * It checks if each database pointer is not NULL before attempting to free its memory.
+ * this function deallocates memory that was dynamically allocated for all databases: `userDb`, `moviesDb`, and `ratingsDb`.
+ * 
+ * it checks if each database pointer is not NULL before attempting to free its memory.
+ * @return none.
  */
 void freeAllMemory() {
-    if(userDatabase != NULL) { //free memory for userDatabase
-        for(int i = 0; i < MAX_USERS; i++) { //iterate through each string in the array and free its memory
-            free(userDatabase[i]);
-        }
-        free(userDatabase); //free the memory allocated for the array itself
+    //free memory for userDb
+    if(userDb != NULL) {
+        freeCharMemory(userDb, usersCount);
     }
-    if(movieDatabase != NULL) { //free memory for movieDatabase
-        for(int i = 0; i < movieCount; i++) { //iterate through each string in the array and free its memory
-            free(movieDatabase[i]);
-        }
-        free(movieDatabase); //free the memory allocated for the array itself
+    //free memory for moviesDb
+    if(moviesDb != NULL) {
+        freeCharMemory(moviesDb, moviesCount);
     }
-    if(ratingsDatabase != NULL) { //free memory for ratingsDatabase
-        for(int i = 0; i < userCount; i++) { //iterate through each string in the array and free its memory
-            free(ratingsDatabase[i]);
-        }
-        free(ratingsDatabase); //free the memory allocated for the array itself
+    //free memory for ratingsDb
+    if(ratingsDb != NULL) {
+        freeFloatMemory(ratingsDb, usersCount);
     }
 }

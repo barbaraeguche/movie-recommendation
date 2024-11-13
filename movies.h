@@ -11,7 +11,7 @@ bool isUserRegistered(const char *);
 void readMovies();
 void displayMovies();
 void readRatingsFromDb();
-int userRatingIndex(const char *);
+int findUserIndex(const char *);
 float validateInput(const char *, int);
 void rateMovie();
 void writeRatingsToDb();
