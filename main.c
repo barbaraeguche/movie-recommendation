@@ -6,8 +6,8 @@
  * @return 0 upon successful execution.
  */
 int main() {
+    printf("\n~~~~~~~~~~~~~~ Welcome to my Movie Recommendation System ~~~~~~~~~~~~~~\n\n");
     int prompt;
-    // printf("\n--------------------------------------- NEXT RUN --------------------------------------\n");
 
     do {
         displayMenu();
