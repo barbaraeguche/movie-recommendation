@@ -1,4 +1,8 @@
 cmake_minimum_required(VERSION 3.5.0)
 project(movie VERSION 0.1.0 LANGUAGES C)
 
-add_executable(movie main.c)
+add_executable(movie 
+    main.c
+    movies.c
+    movies.h
+)

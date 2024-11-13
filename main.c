@@ -1,8 +1,7 @@
 #include <stdio.h>
-#include "movie.h"
+#include "movies.h"
 
 /**
- * @brief Main function of the movie recommendation system.
  * This function serves as the entry point for the movie recommendation system.
  * It displays a menu to the user and performs various actions based on the user's choice.
  * @return 0 upon successful execution
