@@ -13,7 +13,7 @@ to get the project up and running on your local machine, follow these steps:
 
 - **clone the repository:**
 ```bash
-git clone git clone https://github.com/barbaraeguche/movie-recommendation.git
+git clone https://github.com/barbaraeguche/movie-recommendation.git
 ```
 - **navigate to the project directory:**
 ```bash
