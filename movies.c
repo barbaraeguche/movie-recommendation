@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "movie.h"
+#include "movies.h"
 
 //----------------------------------------------------------------//
 #define MAX_USERS 20
