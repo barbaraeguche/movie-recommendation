@@ -2,37 +2,43 @@
 #include "movies.h"
 
 /**
- * This function serves as the entry point for the movie recommendation system.
- * It displays a menu to the user and performs various actions based on the user's choice.
- * @return 0 upon successful execution
+ * this function serves as the entry point for the movie recommendation system.
+ * @return 0 upon successful execution.
  */
 int main() {
-    int userChoice;
+    int prompt;
+    // printf("\n--------------------------------------- NEXT RUN --------------------------------------\n");
 
     do {
         displayMenu();
-        scanf("%d", &userChoice);
+        scanf("%d", &prompt);
 
-        switch(userChoice) {
-            case 1: registerUser();
-                printf("\n--------------------------------------- NEXT RUN --------------------------------------\n");
+        switch(prompt) {
+            case 1: 
+                registerUser();
+                printf("\n\n");
                 break;
-            case 2: displayMovies();
-                printf("\n--------------------------------------- NEXT RUN --------------------------------------\n");
+            case 2: 
+                displayMovies();
+                printf("\n\n");
                 break;
-            case 3: rateMovie();
-                printf("\n--------------------------------------- NEXT RUN --------------------------------------\n");
+            case 3: 
+                rateMovie();
+                printf("\n\n");
                 break;
-            case 4: movieRecommended();
-                printf("\n--------------------------------------- NEXT RUN --------------------------------------\n");
+            case 4: 
+                recommendMovies();
+                printf("\n\n");
                 break;
-            case 0: freeAllMemory();
+            case 0: 
+                freeAllMemory();
                 break;
-            default: printf("Code not valid, try again...\n");
-                printf("\n--------------------------------------- NEXT RUN --------------------------------------\n");
+            default: 
+                printf("Code not valid, try again...\n");
+                printf("\n\n");
         }
-    } while(userChoice != 0);
+    } while(prompt != 0);
 
-    printf("Terminating Movie Recommendation System...\n");
+    printf("Terminating the recommendation system...");
     return 0;
 }

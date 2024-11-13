@@ -2,22 +2,22 @@
 
 #ifndef MOVIES_H
 #define MOVIES_H
-//----------------------------------------------------------------//
+
 void displayMenu();
-void readUsersFromFile();
+void readUsersFromDb();
 void registerUser();
-void writeUsersToFile();
+void writeUsersToDb();
 bool isUserRegistered(const char *);
-void readMoviesFromFile();
+void readMovies();
 void displayMovies();
-void readRatingsFromFile();
+void readRatingsFromDb();
 int userRatingIndex(const char *);
-float validateNumber(const char *, int);
+float validateInput(const char *, int);
 void rateMovie();
-void writeRatingsToFile();
-void movieRecommended();
+void writeRatingsToDb();
+void recommendMovies();
 void freeCharMemory(char **, int);
 void freeFloatMemory(float **, int);
 void freeAllMemory();
-//----------------------------------------------------------------//
+
 #endif
