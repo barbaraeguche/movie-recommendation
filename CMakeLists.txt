@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.5.0)
-project(movie VERSION 0.1.0 LANGUAGES C)
+project(movie-recommendation VERSION 0.1.0 LANGUAGES C)
 
-add_executable(movie 
-    main.c
-    movies.c
-    movies.h
-)
+add_executable(movie-recommendation main.c movies.c)
+
+include(CTest)
+enable_testing()
